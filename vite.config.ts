@@ -7,7 +7,7 @@ export default defineConfig(({ mode }) => {
     const isProd = mode === 'production';
 
     return {
-      base: isProd ? '/world26/' : '/',
+      base: './',
       envPrefix: 'VITE_',
       server: {
         port: 3000,
