@@ -140,7 +140,16 @@ export async function decideNextAction(
     if (!resp.ok) throw new Error(`Mistral API error: ${resp.status}`);
 
     const data = await resp.json();
-    let responseText = data.choices?.[0]?.message?.content || '{}';
+    
+    // Handle both raw Mistral response AND the proxy's wrapped { text, success } format
+    let responseText = '';
+    if (data.text) {
+      responseText = data.text;
+    } else if (data.choices?.[0]?.message?.content) {
+      responseText = data.choices[0].message.content;
+    } else {
+      responseText = '{}';
+    }
     
     // Sanitize response: strip markdown code blocks if the AI includes them
     if (responseText.includes('```')) {

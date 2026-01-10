@@ -1,24 +1,28 @@
 import { SimulationState } from "../types";
 
-const PROXY_URL = (import.meta as any)?.env?.VITE_PROXY_URL || '';
+import { SimulationState } from "../types";
+
+// Using relative path to utilize Vite's dev server proxy to port 3001
+const API_BASE = "/api/state";
 
 export async function saveSimulationState(state: SimulationState): Promise<void> {
-  if (!PROXY_URL) return;
   try {
-    await fetch(`${PROXY_URL}/state`, {
+    const response = await fetch(API_BASE, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ state })
     });
+    if (!response.ok) {
+        throw new Error(`Server returned ${response.status}`);
+    }
   } catch (err) {
     console.error("Failed to persist memory:", err);
   }
 }
 
 export async function loadSimulationState(): Promise<SimulationState | null> {
-  if (!PROXY_URL) return null;
   try {
-    const resp = await fetch(`${PROXY_URL}/state`);
+    const resp = await fetch(API_BASE);
     if (!resp.ok) return null;
     const data = await resp.json();
     return data.state;
@@ -27,3 +31,4 @@ export async function loadSimulationState(): Promise<SimulationState | null> {
     return null;
   }
 }
+
