@@ -26,7 +26,8 @@ function App() {
       totalBlocks: 0,
       unlockedBlueprints: ['Core Protocol', 'Adaptive Clustering']
     },
-    ui: { showStats: true, showKnowledge: true, showLogs: true, showPlanning: true }
+    apiMetrics: [],
+    ui: { showStats: true, showKnowledge: true, showLogs: true, showPlanning: true, showNetwork: true }
   });
 
   const [avatarPos, setAvatarPos] = useState<[number, number, number]>([0, 0, 0]);
@@ -55,6 +56,7 @@ function App() {
     addLog("Accessing local sector topology map...", "thinking");
     await new Promise(r => setTimeout(r, 600));
     setTaskProgress(20);
+    const apiStartTime = Date.now();
 
     try {
       const decision: AIActionResponse = await decideNextAction(
@@ -66,6 +68,12 @@ function App() {
         state.activePlan
       );
       
+      const apiLatency = Date.now() - apiStartTime;
+      setState(prev => ({
+        ...prev,
+        apiMetrics: [...prev.apiMetrics, { id: Math.random().toString(), timestamp: Date.now(), latency: apiLatency, status: 'success' }].slice(-20)
+      }));
+
       setTaskProgress(40);
       addLog("Neural Uplink Successful. Processing synthesis packets...", "success");
       
@@ -155,7 +163,11 @@ function App() {
       }
     } catch (e) {
       addLog("Critical neural desync. Link unstable.", "error");
-      setState(prev => ({ ...prev, networkStatus: 'error' }));
+      setState(prev => ({ 
+        ...prev, 
+        networkStatus: 'error',
+        apiMetrics: [...prev.apiMetrics, { id: Math.random().toString(), timestamp: Date.now(), latency: Date.now() - apiStartTime, status: 'error' }].slice(-20) 
+      }));
     } finally {
       setIsProcessing(false);
       setTaskProgress(0);
@@ -183,10 +195,10 @@ function App() {
       {/* HUD CONTROLS */}
       <div className="absolute top-8 right-8 z-20 flex flex-col gap-3 items-end">
         <div className="flex bg-black/40 backdrop-blur-xl p-1.5 rounded-2xl border border-white/5 shadow-2xl">
-          {['Stats', 'Knowledge', 'Planning', 'Logs'].map((k) => (
+          {['Stats', 'Knowledge', 'Planning', 'Logs', 'Network'].map((k) => (
             <button key={k} onClick={() => setState(p => ({ ...p, ui: { ...p.ui, [`show${k}`]: !p.ui[`show${k}` as keyof SimulationState['ui']] } }))}
               className={`px-5 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${state.ui[`show${k}` as keyof SimulationState['ui']] ? 'bg-white text-slate-950 shadow-[0_0_15px_rgba(255,255,255,0.2)]' : 'text-white/40 hover:text-white'}`}>
-              {k === 'Knowledge' ? 'Neural' : k}
+              {k === 'Knowledge' ? 'Neural' : k === 'Network' ? 'API Graph' : k}
             </button>
           ))}
         </div>
@@ -209,6 +221,40 @@ function App() {
           </span>
         </div>
       </div>
+
+      {/* API GRAPH PANEL */}
+      {state.ui.showNetwork && (
+        <div className="absolute top-24 left-[380px] z-10 w-[300px] h-[180px] bg-black/60 backdrop-blur-2xl border border-white/10 rounded-[30px] shadow-2xl animate-in fade-in zoom-in-95 duration-500 overflow-hidden flex flex-col">
+           <div className="px-6 py-4 border-b border-white/5 flex justify-between items-center bg-white/5">
+            <span className="text-[10px] font-black uppercase text-emerald-400 tracking-[0.3em]">Network Latency</span>
+            <div className="flex gap-1">
+               <div className="w-1.5 h-1.5 rounded-full bg-emerald-500"></div>
+               <div className="w-1.5 h-1.5 rounded-full bg-red-500"></div>
+            </div>
+          </div>
+          <div className="flex-1 relative flex items-end justify-between px-6 pb-4 pt-8 gap-1">
+             {/* Dynamic Bars */}
+             {state.apiMetrics.length === 0 && <div className="absolute inset-0 flex items-center justify-center text-[9px] uppercase tracking-widest text-white/20">No Data Stream</div>}
+             {state.apiMetrics.map((m) => {
+               const heightPct = Math.min(100, (m.latency / 2000) * 100); 
+               return (
+                 <div key={m.id} className="flex-1 flex flex-col justify-end items-center group relative h-full">
+                   <div 
+                    style={{ height: `${Math.max(5, heightPct)}%` }} 
+                    className={`w-full max-w-[8px] rounded-t-sm transition-all duration-500 ${m.status === 'success' ? 'bg-emerald-400/80 group-hover:bg-emerald-300' : 'bg-red-500/80 group-hover:bg-red-400'}`}
+                   />
+                   {/* Tooltip */}
+                   <div className="absolute bottom-full mb-1 opacity-0 group-hover:opacity-100 transition-opacity bg-black border border-white/10 px-2 py-1 rounded text-[9px] whitespace-nowrap z-50 pointer-events-none">
+                     {m.latency}ms
+                   </div>
+                 </div>
+               );
+             })}
+             {/* Reference Line (1s) */}
+             <div className="absolute top-1/2 left-0 w-full h-[1px] bg-white/5 border-t border-dashed border-white/10 pointer-events-none"><span className="absolute right-1 -top-3 text-[8px] text-white/20">1s</span></div>
+          </div>
+        </div>
+      )}
 
       {/* PLANNING HUD */}
       {state.ui.showPlanning && state.activePlan && (

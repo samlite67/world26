@@ -56,6 +56,14 @@ export interface ProgressionStats {
   unlockedBlueprints: string[];
 }
 
+export interface ApiMetric {
+  id: string;
+  timestamp: number;
+  latency: number;
+  tokens?: number;
+  status: 'success' | 'error' | 'timeout';
+}
+
 export interface SimulationState {
   objects: WorldObject[];
   logs: LogEntry[];
@@ -65,10 +73,12 @@ export interface SimulationState {
   progression: ProgressionStats;
   networkStatus: 'offline' | 'uplink_active' | 'syncing' | 'error';
   activePlan?: ConstructionPlan;
+  apiMetrics: ApiMetric[];
   ui: {
     showStats: boolean;
     showKnowledge: boolean;
     showLogs: boolean;
     showPlanning: boolean;
+    showNetwork: boolean;
   };
 }
