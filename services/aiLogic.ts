@@ -54,7 +54,7 @@ export async function decideNextAction(
     - If activePlan exists, execute the next step.
     - If no plan exists, you MUST generate a high-level ConstructionPlan (minimum 3 steps) that targets the goal: "${currentGoal}".
     
-    Return output as strictly valid JSON.
+    Return output as STRICT RAW JSON ONLY. Do not include markdown code blocks, preamble, or any other text.
   `;
 
   const prompt = `
@@ -116,8 +116,14 @@ export async function decideNextAction(
     if (!resp.ok) throw new Error(`Mistral API error: ${resp.status}`);
 
     const data = await resp.json();
-    const responseText = data.choices?.[0]?.message?.content || '{}';
-    const parsed = JSON.parse(responseText.trim());
+    let responseText = data.choices?.[0]?.message?.content || '{}';
+    
+    // Sanitize response: strip markdown code blocks if the AI includes them
+    if (responseText.includes('```')) {
+      responseText = responseText.replace(/```[a-z]*\n?/gi, '').replace(/```/g, '').trim();
+    }
+
+    const parsed = JSON.parse(responseText);
     const links: GroundingLink[] = [];
 
     return { ...parsed, groundingLinks: links } as AIActionResponse;
