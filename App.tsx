@@ -38,20 +38,40 @@ function App() {
   const [taskProgress, setTaskProgress] = useState(0);
   const logContainerRef = useRef<HTMLDivElement>(null);
 
+  const addLog = useCallback((message: string, type: LogEntry['type'] = 'action') => {
+    setState(prev => ({
+      ...prev,
+      logs: [...prev.logs, { id: Math.random().toString(), type, message, timestamp: Date.now() }]
+    }));
+  }, []);
+
   // Load state on mount
   useEffect(() => {
     async function initMemory() {
-      const savedState = await loadSimulationState();
-      if (savedState) {
-        setState(savedState);
-        addLog("Neural Memory Restored: Continuing previous simulation.", "success");
-        if (savedState.objects.length > 0) {
-          setAvatarPos(savedState.objects[savedState.objects.length - 1].position);
+      try {
+        const savedState = await loadSimulationState();
+        if (savedState) {
+          setState(prev => ({
+            ...prev,
+            ...savedState,
+            // Ensure UI settings and metrics aren't wiped if missing in save
+            ui: savedState.ui || prev.ui,
+            apiMetrics: savedState.apiMetrics || prev.apiMetrics,
+            logs: savedState.logs || prev.logs
+          }));
+          
+          addLog("Neural Memory Restored: Continuing previous simulation.", "success");
+          
+          if (savedState.objects && savedState.objects.length > 0) {
+            setAvatarPos(savedState.objects[savedState.objects.length - 1].position);
+          }
         }
+      } catch (err) {
+        console.error("Memory initialization failed:", err);
       }
     }
     initMemory();
-  }, []);
+  }, [addLog]);
 
   // Auto-save state whenever significant changes occur
   useEffect(() => {
@@ -63,12 +83,6 @@ function App() {
     return () => clearTimeout(timer);
   }, [state.objects, state.knowledgeBase, state.progression, state.activePlan]);
 
-  const addLog = useCallback((message: string, type: LogEntry['type'] = 'action') => {
-    setState(prev => ({
-      ...prev,
-      logs: [...prev.logs, { id: Math.random().toString(), type, message, timestamp: Date.now() }]
-    }));
-  }, []);
 
   const runSimulationStep = useCallback(async () => {
     if (isProcessing) return;
