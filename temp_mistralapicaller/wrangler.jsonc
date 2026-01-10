@@ -5,5 +5,12 @@
 	"upload_source_maps": true,
 	"observability": {
 		"enabled": true
-	}
+	},
+	"d1_databases": [
+		{
+			"binding": "DB",
+			"database_name": "world26-memory",
+			"database_id": "441706b7-4883-453f-a16b-fc9d88087968"
+		}
+	]
 }

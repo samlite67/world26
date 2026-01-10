@@ -4,6 +4,7 @@ import SimulationCanvas from './components/SimulationCanvas';
 import { KnowledgeGraph } from './components/KnowledgeGraph';
 import { WorldObject, LogEntry, SimulationState, KnowledgeEntry, GroundingLink, ConstructionPlan, KnowledgeCategory } from './types';
 import { decideNextAction, AIActionResponse } from './services/aiLogic';
+import { loadSimulationState, saveSimulationState } from './services/memoryService';
 
 const INITIAL_GOAL = "Synthesize Sustainable Modular Settlement";
 
@@ -36,6 +37,31 @@ function App() {
   const [currentTask, setCurrentTask] = useState<string>("Analyzing Local Sector...");
   const [taskProgress, setTaskProgress] = useState(0);
   const logContainerRef = useRef<HTMLDivElement>(null);
+
+  // Load state on mount
+  useEffect(() => {
+    async function initMemory() {
+      const savedState = await loadSimulationState();
+      if (savedState) {
+        setState(savedState);
+        addLog("Neural Memory Restored: Continuing previous simulation.", "success");
+        if (savedState.objects.length > 0) {
+          setAvatarPos(savedState.objects[savedState.objects.length - 1].position);
+        }
+      }
+    }
+    initMemory();
+  }, []);
+
+  // Auto-save state whenever significant changes occur
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      if (state.objects.length > 0 || state.knowledgeBase.length > 0) {
+        saveSimulationState(state);
+      }
+    }, 5000); 
+    return () => clearTimeout(timer);
+  }, [state.objects, state.knowledgeBase, state.progression, state.activePlan]);
 
   const addLog = useCallback((message: string, type: LogEntry['type'] = 'action') => {
     setState(prev => ({
