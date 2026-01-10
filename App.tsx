@@ -112,11 +112,19 @@ function App() {
 
         setState(prev => {
           let updatedPlan = decision.plan || prev.activePlan;
-          if (updatedPlan) {
+          if (updatedPlan && updatedPlan.steps && updatedPlan.steps[updatedPlan.currentStepIndex]) {
             const steps = [...updatedPlan.steps];
             steps[updatedPlan.currentStepIndex].status = 'completed';
             
-            const nextIdx = updatedPlan.currentStepIndex + (decision.plan ? 0 : 1);
+            // If the AI provided a new plan AND executed a PLACE action, we should normally advance the step.
+            // However, to be safe, we only advance if we didn't just receive this plan (unless we want to assume the first step was just done).
+            // Logic: PLACE implies we did work. So we should increment. 
+            // Previous logic: + (decision.plan ? 0 : 1). This kept it at 0 if new plan. 
+            // If we keep it at 0, we mark it completed then immediately active again.
+            // Let's assume if it is a NEW plan, we treat the PLACE as the completion of the current step (index 0 usually).
+            
+            const nextIdx = updatedPlan.currentStepIndex + 1; 
+            
             if (nextIdx < steps.length) {
               steps[nextIdx].status = 'active';
               updatedPlan = { ...updatedPlan, steps, currentStepIndex: nextIdx };
@@ -124,6 +132,9 @@ function App() {
               updatedPlan = undefined;
               addLog("Strategic Objective Achieved.", "success");
             }
+          } else if (updatedPlan && (!updatedPlan.steps || !updatedPlan.steps[updatedPlan.currentStepIndex])) {
+             // Fallback if plan is malformed or finished
+             updatedPlan = undefined;
           }
 
           const newKnowledge = [...prev.knowledgeBase];
