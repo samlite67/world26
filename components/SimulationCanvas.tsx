@@ -41,7 +41,8 @@ const Terrain: React.FC = () => {
 const SimulationCanvas: React.FC<SimulationCanvasProps> = ({ objects, avatarPos, avatarTarget, activePlan }) => {
   const ghostObjects = useMemo(() => {
     if (!activePlan) return [];
-    return activePlan.steps.slice(activePlan.currentStepIndex + 1);
+    // Show all steps that are not yet completed (active or pending)
+    return activePlan.steps.filter(step => step.status !== 'completed');
   }, [activePlan]);
 
   return (

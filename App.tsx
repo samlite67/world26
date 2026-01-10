@@ -222,91 +222,109 @@ function App() {
         </div>
       </div>
 
-      {/* API GRAPH PANEL */}
-      {state.ui.showNetwork && (
-        <div className="absolute top-24 left-[380px] z-10 w-[300px] h-[180px] bg-black/60 backdrop-blur-2xl border border-white/10 rounded-[30px] shadow-2xl animate-in fade-in zoom-in-95 duration-500 overflow-hidden flex flex-col">
-           <div className="px-6 py-4 border-b border-white/5 flex justify-between items-center bg-white/5">
-            <span className="text-[10px] font-black uppercase text-emerald-400 tracking-[0.3em]">Network Latency</span>
-            <div className="flex gap-1">
-               <div className="w-1.5 h-1.5 rounded-full bg-emerald-500"></div>
-               <div className="w-1.5 h-1.5 rounded-full bg-red-500"></div>
-            </div>
-          </div>
-          <div className="flex-1 relative flex items-end justify-between px-6 pb-4 pt-8 gap-1">
-             {/* Dynamic Bars */}
-             {state.apiMetrics.length === 0 && <div className="absolute inset-0 flex items-center justify-center text-[9px] uppercase tracking-widest text-white/20">No Data Stream</div>}
-             {state.apiMetrics.map((m) => {
-               const heightPct = Math.min(100, (m.latency / 2000) * 100); 
-               return (
-                 <div key={m.id} className="flex-1 flex flex-col justify-end items-center group relative h-full">
-                   <div 
-                    style={{ height: `${Math.max(5, heightPct)}%` }} 
-                    className={`w-full max-w-[8px] rounded-t-sm transition-all duration-500 ${m.status === 'success' ? 'bg-emerald-400/80 group-hover:bg-emerald-300' : 'bg-red-500/80 group-hover:bg-red-400'}`}
-                   />
-                   {/* Tooltip */}
-                   <div className="absolute bottom-full mb-1 opacity-0 group-hover:opacity-100 transition-opacity bg-black border border-white/10 px-2 py-1 rounded text-[9px] whitespace-nowrap z-50 pointer-events-none">
-                     {m.latency}ms
-                   </div>
-                 </div>
-               );
-             })}
-             {/* Reference Line (1s) */}
-             <div className="absolute top-1/2 left-0 w-full h-[1px] bg-white/5 border-t border-dashed border-white/10 pointer-events-none"><span className="absolute right-1 -top-3 text-[8px] text-white/20">1s</span></div>
-          </div>
-        </div>
-      )}
-
-      {/* PLANNING HUD */}
-      {state.ui.showPlanning && state.activePlan && (
-        <div className="absolute top-8 left-1/2 -translate-x-1/2 z-10 w-[450px] p-8 bg-black/60 backdrop-blur-3xl border border-white/10 rounded-[40px] shadow-2xl animate-in fade-in zoom-in-95 duration-500">
-          <div className="flex flex-col gap-1 mb-6">
-            <span className="text-[10px] font-black uppercase text-emerald-400 tracking-[0.4em]">Current Objective</span>
-            <h2 className="text-xl font-black italic uppercase tracking-tighter text-white">{state.activePlan.objective || "Strategic Synthesis"}</h2>
-          </div>
-          <div className="space-y-3">
-            {state.activePlan.steps.map((step, idx) => (
-              <div key={idx} className={`relative flex items-center justify-between p-4 rounded-2xl border transition-all duration-500 ${step.status === 'active' ? 'bg-emerald-500/10 border-emerald-500 shadow-[0_0_20px_rgba(16,185,129,0.1)]' : step.status === 'completed' ? 'bg-white/5 border-white/10 opacity-40' : 'bg-transparent border-white/5 opacity-20'}`}>
-                <div className="flex items-center gap-4">
-                  <div className={`w-2 h-2 rounded-full ${step.status === 'active' ? 'bg-emerald-400 animate-pulse' : step.status === 'completed' ? 'bg-white' : 'bg-white/20'}`} />
-                  <span className="text-xs font-bold tracking-tight">{step.label}</span>
-                </div>
-                <span className="text-[9px] font-mono text-white/30">[{step.type.toUpperCase()}]</span>
+      {/* LEFT SIDEBAR DASHBOARD */}
+      <div className="absolute top-8 left-8 bottom-24 w-80 flex flex-col gap-4 z-10 pointer-events-none">
+        
+        {/* STATS PANEL */}
+        {state.ui.showStats && (
+          <div className="pointer-events-auto p-6 bg-black/40 backdrop-blur-2xl border border-white/10 rounded-[30px] shadow-2xl animate-in slide-in-from-left-8 duration-700 flex flex-col gap-6 shrink-0">
+             {/* Header */}
+             <div className="flex items-center gap-4">
+              <div className="w-1.5 h-12 bg-sky-400 rounded-full shadow-[0_0_20px_#38bdf8]" />
+              <div>
+                <h1 className="text-2xl font-black italic tracking-tighter text-white leading-none">OS.ALPHA <span className="text-[10px] text-sky-400 align-top">v1.2</span></h1>
+                <div className="text-[9px] font-mono text-white/40 tracking-[0.3em] mt-1 uppercase">Complexity: Tier {state.progression.complexityLevel}</div>
               </div>
-            ))}
-          </div>
-        </div>
-      )}
+            </div>
+            
+            {/* Task Bar */}
+            <div className="bg-white/5 p-4 rounded-2xl border border-white/5">
+              <span className="text-[8px] font-black uppercase text-white/30 tracking-widest block mb-2">Architectural State</span>
+              <p className="text-xs font-bold text-sky-100">{currentTask}</p>
+              {isProcessing && <div className="mt-3 h-0.5 bg-white/5 rounded-full overflow-hidden"><div className="h-full bg-sky-400 transition-all duration-700" style={{ width: `${taskProgress}%` }} /></div>}
+            </div>
 
-      {/* STATS PANEL */}
-      {state.ui.showStats && (
-        <div className="absolute top-8 left-8 z-10 w-80 p-8 bg-black/40 backdrop-blur-2xl border border-white/10 rounded-[35px] shadow-2xl animate-in slide-in-from-left-8 duration-700">
-          <div className="flex items-center gap-4 mb-10">
-            <div className="w-1.5 h-14 bg-sky-400 rounded-full shadow-[0_0_20px_#38bdf8]" />
-            <div>
-              <h1 className="text-3xl font-black italic tracking-tighter text-white leading-none">OS.ALPHA</h1>
-              <div className="text-[10px] font-mono text-sky-400 tracking-[0.3em] mt-1 uppercase">Complexity: Tier {state.progression.complexityLevel}</div>
+            {/* Grid Stats */}
+            <div className="grid grid-cols-2 gap-3">
+              <div className="bg-white/5 p-3 rounded-2xl border border-white/5"><div className="text-[7px] font-black text-white/20 uppercase mb-1">Structures</div><div className="text-xl font-mono font-bold text-white">{state.progression.structuresCompleted}</div></div>
+              <div className="bg-white/5 p-3 rounded-2xl border border-white/5"><div className="text-[7px] font-black text-white/20 uppercase mb-1">Knowledge</div><div className="text-xl font-mono font-bold text-white">{state.knowledgeBase.length}</div></div>
             </div>
-          </div>
-          <div className="space-y-6">
-            <div className="bg-white/5 p-5 rounded-2xl border border-white/5">
-              <span className="text-[9px] font-black uppercase text-white/30 tracking-widest block mb-2">Architectural State</span>
-              <p className="text-sm font-bold text-sky-100">{currentTask}</p>
-              {isProcessing && <div className="mt-4 h-1 bg-white/5 rounded-full overflow-hidden"><div className="h-full bg-sky-400 transition-all duration-700" style={{ width: `${taskProgress}%` }} /></div>}
-            </div>
-            <div className="grid grid-cols-2 gap-4">
-              <div className="bg-white/5 p-4 rounded-2xl border border-white/5"><div className="text-[8px] font-black text-white/20 uppercase mb-1">Synthesis</div><div className="text-2xl font-mono font-bold text-white">{state.progression.totalBlocks}</div></div>
-              <div className="bg-white/5 p-4 rounded-2xl border border-white/5"><div className="text-[8px] font-black text-white/20 uppercase mb-1">Knowledge</div><div className="text-2xl font-mono font-bold text-white">{state.knowledgeBase.length}</div></div>
-            </div>
-            {/* Added detailed stats breakdown */}
+
+             {/* Resources Breakdown */}
             <div className="bg-white/5 p-4 rounded-2xl border border-white/5">
                 <div className="text-[8px] font-black text-white/20 uppercase mb-2">Modules Deployed</div>
                 <div className="grid grid-cols-2 gap-2 text-[9px] font-mono text-white/50">
-                    <div className="flex justify-between"><span>INFRA</span> <span className="text-white">{state.objects.filter(o => ['wall', 'door', 'fence'].includes(o.type)).length}</span></div>
+                    <div className="flex justify-between"><span>INFRA</span> <span className="text-white">{state.objects.filter(o => ['wall', 'door', 'fence', 'roof'].includes(o.type)).length}</span></div>
                     <div className="flex justify-between"><span>ECO</span> <span className="text-white">{state.objects.filter(o => ['tree', 'crop', 'well'].includes(o.type)).length}</span></div>
                     <div className="flex justify-between"><span>NRG</span> <span className="text-white">{state.objects.filter(o => ['solar_panel', 'water_collector'].includes(o.type)).length}</span></div>
                     <div className="flex justify-between"><span>MOD</span> <span className="text-white">{state.objects.filter(o => o.type === 'modular_unit').length}</span></div>
                 </div>
             </div>
+          </div>
+        )}
+
+        {/* API GRAPH PANEL */}
+        {state.ui.showNetwork && (
+          <div className="pointer-events-auto h-32 bg-black/60 backdrop-blur-2xl border border-white/10 rounded-[30px] shadow-2xl animate-in slide-in-from-left-8 duration-500 overflow-hidden flex flex-col shrink-0">
+             <div className="px-5 py-3 border-b border-white/5 flex justify-between items-center bg-white/5">
+              <span className="text-[9px] font-black uppercase text-emerald-400 tracking-[0.3em]">Neural Uplink</span>
+              <div className="flex gap-1">
+                 <div className="w-1 h-1 rounded-full bg-emerald-500"></div>
+                 <div className="w-1 h-1 rounded-full bg-red-500"></div>
+              </div>
+            </div>
+            <div className="flex-1 relative flex items-end justify-between px-5 pb-2 pt-4 gap-0.5">
+               {/* Dynamic Bars */}
+               {state.apiMetrics.length === 0 && <div className="absolute inset-0 flex items-center justify-center text-[9px] uppercase tracking-widest text-white/20">No Data Stream</div>}
+               {state.apiMetrics.map((m) => {
+                 const heightPct = Math.min(100, (m.latency / 2000) * 100); 
+                 return (
+                   <div key={m.id} className="flex-1 flex flex-col justify-end items-center group relative h-full">
+                     <div 
+                      style={{ height: `${Math.max(5, heightPct)}%` }} 
+                      className={`w-full rounded-t-[1px] transition-all duration-500 ${m.status === 'success' ? 'bg-emerald-400/80 group-hover:bg-emerald-300' : 'bg-red-500/80 group-hover:bg-red-400'}`}
+                     />
+                   </div>
+                 );
+               })}
+               <div className="absolute top-1/2 left-0 w-full h-[1px] bg-white/5 border-t border-dashed border-white/10 pointer-events-none"></div>
+            </div>
+          </div>
+        )}
+
+        {/* LOGS PANEL */}
+        {state.ui.showLogs && (
+            <div className="pointer-events-auto flex-1 min-h-[150px] bg-black/80 backdrop-blur-2xl border border-white/10 rounded-[30px] overflow-hidden shadow-2xl animate-in slide-in-from-left-8 duration-700 flex flex-col">
+            <div className="px-6 py-4 border-b border-white/5 text-[9px] font-black uppercase text-white/30 tracking-[0.3em]">Direct Activity Link</div>
+            <div ref={logContainerRef} className="flex-1 overflow-y-auto p-6 space-y-2 font-mono text-[9px]">
+                {state.logs.map(log => (
+                <div key={log.id} className={`flex gap-3 p-2 rounded-lg transition-all duration-300 ${log.type === 'success' ? 'bg-emerald-500/10 text-emerald-300' : log.type === 'error' ? 'bg-rose-500/10 text-rose-300' : log.type === 'thinking' ? 'bg-sky-500/5 text-sky-400/80 italic border-l block pl-2 border-sky-400/30' : 'bg-white/5 text-white/50'}`}>
+                    <span className="opacity-30 shrink-0">[{new Date(log.timestamp).toLocaleTimeString([], { hour12: false, hour: '2-digit', minute: '2-digit', second: '2-digit' })}]</span>
+                    <span className="font-bold">{log.message}</span>
+                </div>
+                ))}
+            </div>
+            </div>
+        )}
+      </div>
+
+       {/* PLANNING HUD */}
+       {state.ui.showPlanning && state.activePlan && (
+        <div className="absolute top-8 left-1/2 -translate-x-1/2 z-10 w-[420px] p-6 bg-black/60 backdrop-blur-3xl border border-white/10 rounded-[40px] shadow-2xl animate-in fade-in zoom-in-95 duration-500">
+          <div className="flex flex-col gap-1 mb-4 text-center">
+            <span className="text-[9px] font-black uppercase text-emerald-400 tracking-[0.4em]">Current Objective</span>
+            <h2 className="text-lg font-black italic uppercase tracking-tighter text-white">{state.activePlan.objective || "Strategic Synthesis"}</h2>
+          </div>
+          <div className="space-y-2">
+            {state.activePlan.steps.map((step, idx) => (
+              <div key={idx} className={`relative flex items-center justify-between p-3 rounded-xl border transition-all duration-500 ${step.status === 'active' ? 'bg-emerald-500/10 border-emerald-500 shadow-[0_0_20px_rgba(16,185,129,0.1)]' : step.status === 'completed' ? 'bg-white/5 border-white/10 opacity-40' : 'bg-transparent border-white/5 opacity-20'}`}>
+                <div className="flex items-center gap-3">
+                  <div className={`w-1.5 h-1.5 rounded-full ${step.status === 'active' ? 'bg-emerald-400 animate-pulse' : step.status === 'completed' ? 'bg-white' : 'bg-white/20'}`} />
+                  <span className="text-[10px] font-bold tracking-tight uppercase">{step.label}</span>
+                </div>
+                <span className="text-[8px] font-mono text-white/30">[{step.type.toUpperCase()}]</span>
+              </div>
+            ))}
           </div>
         </div>
       )}
@@ -334,21 +352,6 @@ function App() {
                 </div>
               ))
             )}
-          </div>
-        </div>
-      )}
-
-      {/* LOGS PANEL */}
-      {state.ui.showLogs && (
-        <div className="absolute bottom-8 left-8 z-10 w-[480px] h-[320px] bg-black/80 backdrop-blur-2xl border border-white/10 rounded-[35px] overflow-hidden shadow-2xl animate-in slide-in-from-bottom-8 duration-700 flex flex-col">
-          <div className="px-8 py-5 border-b border-white/5 text-[10px] font-black uppercase text-white/30 tracking-[0.3em]">Direct Activity Link</div>
-          <div ref={logContainerRef} className="flex-1 overflow-y-auto p-8 space-y-3 font-mono text-[10px]">
-            {state.logs.map(log => (
-              <div key={log.id} className={`flex gap-4 p-3 rounded-xl transition-all duration-300 ${log.type === 'success' ? 'bg-emerald-500/10 text-emerald-300' : log.type === 'error' ? 'bg-rose-500/10 text-rose-300' : log.type === 'thinking' ? 'bg-sky-500/5 text-sky-400/80 italic border-l-2 border-sky-400/30 ml-2' : 'bg-white/5 text-white/50'}`}>
-                <span className="opacity-30 shrink-0">[{new Date(log.timestamp).toLocaleTimeString([], { hour12: false, hour: '2-digit', minute: '2-digit', second: '2-digit' })}]</span>
-                <span className="font-bold">{log.message}</span>
-              </div>
-            ))}
           </div>
         </div>
       )}

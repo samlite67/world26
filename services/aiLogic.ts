@@ -47,34 +47,49 @@ export async function decideNextAction(
     PRIMARY DIRECTIVE: ITERATIVE ACTION LEARNING
     You operate in a continuous loop: OBSERVE -> PLAN -> ACT -> LEARN.
     
-    PLANNING PROTOCOL (CRITICAL):
-    1. If no "activePlan" exists, create a 3-5 step ConstructionPlan to further the GOAL: "${currentGoal}".
-       - Steps must be sequential (e.g., Foundation -> Pillars -> Roof).
-       - Ensure objects are spaced logically based on SCAN_RESULTS.
-    2. If "activePlan" exists, validate the CURRENT_STEP feasibility (terrain, space).
-       - If feasible, execute 'PLACE'.
-       - If blocked, execute 'MOVE' to a better position or 'WAIT' to re-calculate.
+    PLANNING PROTOCOL (V1.2 UPGRADE):
+    1. SPATIAL ANALYSIS: 
+       - Analyze 'SCAN_RESULTS' to identify clusters. Do not place objects randomly.
+       - Use "Grid Alignment": Place objects at integer coordinates (e.g., [10, 0, 5]).
+       - Maintain "Districts": Group similar types (e.g., Solar Panels near Power Hubs).
     
+    2. BLUEPRINT EXECUTION:
+       - If no "activePlan" exists, generate a Multi-Step ConstructionPlan (3-6 steps).
+       - Steps must be logically connected (Foundation -> Walls -> Roof).
+       - VISUALIZE the complete structure in your plan before acting.
+    
+    3. EXECUTION LOGIC:
+       - If "activePlan" exists, verify the CURRENT_STEP location.
+       - If the location is valid (ground level, not colliding), 'PLACE'.
+       - If blocked, 'MOVE' to a flanking position to clear line-of-sight.
+
     LEARNING PROTOCOL:
     - Your "learningNote" must record the STRATEGIC PATTERN used. 
     - Example: "Cluster pattern efficiency +15% near water sources" or "Structural integrity requires 3m spacing."
     - Do not just describe the action; describe the RULE you derived from it.
 
-    LOGGING PROTOCOL:
-    - Provide 3-5 technical "reasoningSteps". E.g., "Triangulating optimal solar vector", "Verifying structural load", "Committing to plan step 2/5".
-
-    Return output as STRICT RAW JSON ONLY (No markdown).
+    Response Format (STRICT JSON ONLY, no markdown):
+    {
+      "action": "PLACE" | "MOVE" | "WAIT",
+      "objectType": "wall" | "roof" | "floor" | "modular_unit" | "solar_panel" | "tree",
+      "position": [x, y, z],
+      "reason": "Short summary",
+      "reasoningSteps": ["Analysis 1", "Analysis 2", "Decision"],
+      "learningNote": "Insight",
+      "knowledgeCategory": "Architecture",
+      "taskLabel": "UI Status Label",
+      "plan": { "objective": "Building House A", "steps": [{ "id": "1", "type": "wall", "position": [x,y,z], "label": "Wall East", "status": "pending" }] } (Optional: Include only if creating/updating plan)
+    }
   `;
 
   const prompt = `
-    GOAL: ${currentGoal}
-    ELEVATION_DATA: ${elevationSamples.join(', ')}
-    SCAN_RESULTS: ${proximityAnalysis || 'Sector clear.'}
-    KNOWLEDGE_COUNT: ${knowledgeBase.length}
-    PLAN_ACTIVE: ${!!activePlan}
-    ${activePlan ? `CURRENT_STEP: ${activePlan.steps[activePlan.currentStepIndex].label}` : 'INITIATING NEW SEQUENCE...'}
+    GOAL: ${currentGoal} (Version 1.2 Protocol Active)
+    TERRAIN_ELEVATION: ${elevationSamples.join(', ')}
+    NEARBY_STRUCTURES: ${proximityAnalysis || 'Sector Empty - Prime for Colonization'}
+    KNOWLEDGE_NODES: ${knowledgeBase.length}
+    CURRENT_PLAN: ${activePlan ? `Step ${activePlan.currentStepIndex + 1}/${activePlan.steps.length}: ${activePlan.steps[activePlan.currentStepIndex].label} at [${activePlan.steps[activePlan.currentStepIndex].position.join(',')}]` : 'NONE - Awaiting Strategic Blueprint'}
 
-    Perform spatial reasoning and return synthesis command.
+    synthesize_next_move();
   `;
 
   const mistralApiKey = ((import.meta as any)?.env?.VITE_MISTRAL_API_KEY
