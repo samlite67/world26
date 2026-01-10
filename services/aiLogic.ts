@@ -76,7 +76,7 @@ export async function decideNextAction(
       "reason": "Short summary",
       "reasoningSteps": ["Analysis 1", "Analysis 2", "Decision"],
       "learningNote": "Insight",
-      "knowledgeCategory": "Architecture",
+      "knowledgeCategory": "Infrastructure" | "Energy" | "Environment" | "Architecture" | "Synthesis",
       "taskLabel": "UI Status Label",
       "plan": { "objective": "Building House A", "steps": [{ "id": "1", "type": "wall", "position": [x,y,z], "label": "Wall East", "status": "pending" }] } (Optional: Include only if creating/updating plan)
     }

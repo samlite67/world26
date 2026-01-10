@@ -175,20 +175,23 @@ export const KnowledgeGraph: React.FC<{ entries: KnowledgeEntry[], width?: numbe
           if (!n1 || !n2) return null;
           return <line key={idx} x1={n1.x} y1={n1.y} x2={n2.x} y2={n2.y} stroke={e.type === 'sequence' ? 'rgba(255,255,255,0.08)' : CATEGORY_COLORS[nodes.find(n => n.id === e.source)?.category || 'Synthesis'] + '40'} strokeWidth={e.type === 'sequence' ? 1.5 : 0.8} />;
         })}
-        {nodes.map((n, i) => (
+        {nodes.map((n, i) => {
+          const color = CATEGORY_COLORS[n.category] || '#ffffff';
+          return (
           <g key={n.id} filter="url(#nodeGlow)">
             {/* Pulse effect for only the latest node */}
             {i === nodes.length - 1 && (
-              <circle cx={n.x} cy={n.y} r={12} fill={CATEGORY_COLORS[n.category]} opacity="0.2">
+              <circle cx={n.x} cy={n.y} r={12} fill={color} opacity="0.2">
                 <animate attributeName="r" values="8;16;8" dur="2s" repeatCount="indefinite" />
                 <animate attributeName="opacity" values="0.4;0;0.4" dur="2s" repeatCount="indefinite" />
               </circle>
             )}
-            <circle cx={n.x} cy={n.y} r={4.5} fill={CATEGORY_COLORS[n.category]} className="transition-all duration-500 hover:r-6 cursor-pointer" />
-            <circle cx={n.x} cy={n.y} r={8} fill="transparent" stroke={CATEGORY_COLORS[n.category]} strokeWidth="0.5" strokeDasharray="2 2" className="animate-[spin_4s_linear_infinite]" />
+            <circle cx={n.x} cy={n.y} r={4.5} fill={color} className="transition-all duration-500 hover:r-6 cursor-pointer" />
+            <circle cx={n.x} cy={n.y} r={8} fill="transparent" stroke={color} strokeWidth="0.5" strokeDasharray="2 2" className="animate-[spin_4s_linear_infinite]" />
             <title>{n.title} [{n.category}]</title>
           </g>
-        ))}
+          );
+        })}
       </svg>
     </div>
   );
