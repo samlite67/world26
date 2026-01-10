@@ -72,12 +72,16 @@ export async function decideNextAction(
     ?? (typeof process !== 'undefined' ? (process.env as any)?.MISTRAL_API_KEY : '')
     ?? '').toString().trim();
 
-  if (!mistralApiKey) {
+  // Check for proxy URL (Production/GitHub Pages)
+  const proxyUrl = (import.meta as any)?.env?.VITE_PROXY_URL;
+
+  // We need either a direct API key OR a proxy URL
+  if (!mistralApiKey && !proxyUrl) {
     return {
       action: 'WAIT',
-      reason: "Missing Mistral API key. Add VITE_MISTRAL_API_KEY to enable live planning.",
+      reason: "Missing Credentials. Add VITE_MISTRAL_API_KEY or VITE_PROXY_URL.",
       reasoningSteps: ["Credential check failed", "Holding simulation queue", "Awaiting uplink token"],
-      learningNote: "Operating in offline mode due to absent Mistral credentials.",
+      learningNote: "Operating in offline mode due to absent credentials.",
       knowledgeCategory: 'Synthesis',
       taskLabel: "Awaiting Uplink",
       groundingLinks: []
@@ -85,12 +89,19 @@ export async function decideNextAction(
   }
 
   try {
-    const resp = await fetch('https://api.mistral.ai/v1/chat/completions', {
+    // If proxyUrl is present, use it and skip client-side Authorization header
+    const endpoint = proxyUrl || 'https://api.mistral.ai/v1/chat/completions';
+    const headers: Record<string, string> = {
+      'Content-Type': 'application/json',
+    };
+
+    if (!proxyUrl) {
+      headers['Authorization'] = `Bearer ${mistralApiKey}`;
+    }
+
+    const resp = await fetch(endpoint, {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${mistralApiKey}`
-      },
+      headers: headers,
       body: JSON.stringify({
         model: 'mistral-large-latest',
         messages: [

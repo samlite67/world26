@@ -34,6 +34,7 @@ jobs:
         run: npm run build
         env:
           VITE_MISTRAL_API_KEY: ${{ secrets.VITE_MISTRAL_API_KEY }}
+          VITE_PROXY_URL: ${{ secrets.VITE_PROXY_URL }}
 
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
