@@ -251,6 +251,16 @@ function App() {
               <div className="bg-white/5 p-4 rounded-2xl border border-white/5"><div className="text-[8px] font-black text-white/20 uppercase mb-1">Synthesis</div><div className="text-2xl font-mono font-bold text-white">{state.progression.totalBlocks}</div></div>
               <div className="bg-white/5 p-4 rounded-2xl border border-white/5"><div className="text-[8px] font-black text-white/20 uppercase mb-1">Knowledge</div><div className="text-2xl font-mono font-bold text-white">{state.knowledgeBase.length}</div></div>
             </div>
+            {/* Added detailed stats breakdown */}
+            <div className="bg-white/5 p-4 rounded-2xl border border-white/5">
+                <div className="text-[8px] font-black text-white/20 uppercase mb-2">Modules Deployed</div>
+                <div className="grid grid-cols-2 gap-2 text-[9px] font-mono text-white/50">
+                    <div className="flex justify-between"><span>INFRA</span> <span className="text-white">{state.objects.filter(o => ['wall', 'door', 'fence'].includes(o.type)).length}</span></div>
+                    <div className="flex justify-between"><span>ECO</span> <span className="text-white">{state.objects.filter(o => ['tree', 'crop', 'well'].includes(o.type)).length}</span></div>
+                    <div className="flex justify-between"><span>NRG</span> <span className="text-white">{state.objects.filter(o => ['solar_panel', 'water_collector'].includes(o.type)).length}</span></div>
+                    <div className="flex justify-between"><span>MOD</span> <span className="text-white">{state.objects.filter(o => o.type === 'modular_unit').length}</span></div>
+                </div>
+            </div>
           </div>
         </div>
       )}
