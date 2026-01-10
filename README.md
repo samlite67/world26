@@ -15,6 +15,12 @@ View your app in AI Studio: https://ai.studio/apps/drive/1_EaOtIuOLUaXP2xbDTVMLn
 
 1. Install dependencies:
    `npm install`
-2. Set the `MISTRAL_API_KEY` in [.env.local](.env.local) to your Mistral API key
+2. Set the `VITE_MISTRAL_API_KEY` in [.env.local](.env.local) to your Mistral API key
 3. Run the app:
    `npm run dev`
+
+## Deploy to GitHub Pages
+
+- Add a repository secret named `VITE_MISTRAL_API_KEY` with your Mistral key.
+- Push to `main` to trigger [.github/workflows/deploy.yml](.github/workflows/deploy.yml); it builds and publishes to GitHub Pages.
+- Pages base is `/world26/`, so the site will be served from `https://<your-user>.github.io/world26/` once Pages is enabled for the repo.
