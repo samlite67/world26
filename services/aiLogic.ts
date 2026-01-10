@@ -68,19 +68,45 @@ export async function decideNextAction(
     Perform spatial reasoning and return synthesis command.
   `;
 
+  const mistralApiKey = ((import.meta as any)?.env?.VITE_MISTRAL_API_KEY
+    ?? (typeof process !== 'undefined' ? (process.env as any)?.MISTRAL_API_KEY : '')
+    ?? '').toString().trim();
+
+  if (!mistralApiKey) {
+    return {
+      action: 'WAIT',
+      reason: "Missing Mistral API key. Add VITE_MISTRAL_API_KEY to enable live planning.",
+      reasoningSteps: ["Credential check failed", "Holding simulation queue", "Awaiting uplink token"],
+      learningNote: "Operating in offline mode due to absent Mistral credentials.",
+      knowledgeCategory: 'Synthesis',
+      taskLabel: "Awaiting Uplink",
+      groundingLinks: []
+    };
+  }
+
   try {
-    const resp = await fetch('/api/mistral/chat', {
+    const resp = await fetch('https://api.mistral.ai/v1/chat/completions', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${mistralApiKey}`
+      },
       body: JSON.stringify({
-        systemInstruction,
-        prompt,
-        model: 'mistral-large-latest'
+        model: 'mistral-large-latest',
+        messages: [
+          { role: 'system', content: systemInstruction },
+          { role: 'user', content: prompt }
+        ],
+        temperature: 0.7,
+        max_tokens: 2000
       })
     });
-    if (!resp.ok) throw new Error(`Mistral proxy error: ${resp.status}`);
+
+    if (!resp.ok) throw new Error(`Mistral API error: ${resp.status}`);
+
     const data = await resp.json();
-    const parsed = JSON.parse((data.text || '').trim());
+    const responseText = data.choices?.[0]?.message?.content || '{}';
+    const parsed = JSON.parse(responseText.trim());
     const links: GroundingLink[] = [];
 
     return { ...parsed, groundingLinks: links } as AIActionResponse;
