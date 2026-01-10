@@ -67,6 +67,7 @@ function App() {
       );
       
       setTaskProgress(40);
+      addLog("Neural Uplink Successful. Processing synthesis packets...", "success");
       
       // Stream AI reasoning steps line by line
       if (decision.reasoningSteps && decision.reasoningSteps.length > 0) {
@@ -154,10 +155,14 @@ function App() {
       }
     } catch (e) {
       addLog("Critical neural desync. Link unstable.", "error");
+      setState(prev => ({ ...prev, networkStatus: 'error' }));
     } finally {
       setIsProcessing(false);
       setTaskProgress(0);
-      setState(prev => ({ ...prev, networkStatus: 'uplink_active' }));
+      setState(prev => ({ 
+        ...prev, 
+        networkStatus: prev.networkStatus === 'error' ? 'error' : 'uplink_active' 
+      }));
       setCurrentTask(isAuto ? "Scanning Topology..." : "Standby");
     }
   }, [isProcessing, state, isAuto, addLog]);
@@ -185,9 +190,23 @@ function App() {
             </button>
           ))}
         </div>
-        <div className="flex items-center gap-3 bg-white/5 px-4 py-2 rounded-full border border-white/5 backdrop-blur-md">
-          <div className={`w-2 h-2 rounded-full ${state.networkStatus === 'syncing' ? 'bg-sky-400 animate-ping' : 'bg-emerald-400 shadow-[0_0_10px_#34d399]'}`} />
-          <span className="text-[10px] font-black uppercase tracking-[0.2em] text-white/60">Architect Uplink: {state.networkStatus === 'syncing' ? 'SYNC' : 'READY'}</span>
+        <div className="flex items-center gap-3 bg-white/5 px-4 py-2 rounded-full border border-white/5 backdrop-blur-md transition-all duration-500">
+          <div className={`w-2 h-2 rounded-full ${
+            state.networkStatus === 'syncing' ? 'bg-sky-400 animate-ping' : 
+            state.networkStatus === 'error' ? 'bg-red-500 shadow-[0_0_15px_#ef4444]' :
+            'bg-emerald-400 shadow-[0_0_15px_#10b981]'
+          }`} />
+          <span className={`text-[10px] font-black uppercase tracking-[0.2em] ${
+            state.networkStatus === 'syncing' ? 'text-sky-400' : 
+            state.networkStatus === 'error' ? 'text-red-500' :
+            'text-emerald-400'
+          }`}>
+            Uplink: {
+              state.networkStatus === 'syncing' ? 'SYNCING...' : 
+              state.networkStatus === 'error' ? 'LINK ERROR' :
+              'ACTIVE / SUCCESS'
+            }
+          </span>
         </div>
       </div>
 

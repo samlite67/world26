@@ -63,7 +63,7 @@ export interface SimulationState {
   currentGoal: string;
   learningIteration: number;
   progression: ProgressionStats;
-  networkStatus: 'offline' | 'uplink_active' | 'syncing';
+  networkStatus: 'offline' | 'uplink_active' | 'syncing' | 'error';
   activePlan?: ConstructionPlan;
   ui: {
     showStats: boolean;
