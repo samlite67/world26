@@ -11,7 +11,9 @@ export default defineConfig(({ mode }) => {
       envPrefix: 'VITE_',
       define: {
         'import.meta.env.VITE_PROXY_URL': JSON.stringify(
-          'https://mistralapicaller.yusufsamodin67.workers.dev/v1/chat/completions'
+          isProd 
+            ? 'https://mistralapicaller.yusufsamodin67.workers.dev/v1/chat/completions'
+            : undefined
         )
       },
       server: {

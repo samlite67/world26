@@ -40,7 +40,8 @@ app.post('/state', async (c) => {
   }
 });
 
-app.post('/', async (c) => {
+// POST /v1/chat/completions - Proxy to Mistral AI
+app.post('/v1/chat/completions', async (c) => {
   const apiKey = c.env.MISTRAL_API_KEY;
   if (!apiKey) {
     return c.json({ error: 'Configuration Error: Missing API Key' }, 500);
@@ -68,6 +69,15 @@ app.post('/', async (c) => {
   } catch (err: any) {
     return c.json({ error: `Proxy Error: ${err.message}` }, 500);
   }
+});
+
+// Root endpoint for health check
+app.get('/', (c) => {
+  return c.json({ 
+    status: 'online', 
+    service: 'Mistral API Proxy',
+    endpoints: ['/v1/chat/completions', '/state']
+  });
 });
 
 export default app;

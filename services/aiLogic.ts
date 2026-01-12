@@ -96,14 +96,14 @@ export async function decideNextAction(
     ?? (typeof process !== 'undefined' ? (process.env as any)?.MISTRAL_API_KEY : '')
     ?? '').toString().trim();
 
-  // Use Cloudflare Worker proxy in production
-  const proxyUrl = (import.meta as any)?.env?.VITE_PROXY_URL || 'https://mistralapicaller.yusufsamodin67.workers.dev/v1/chat/completions';
+  // Use Cloudflare Worker proxy in production, or direct API in development
+  const proxyUrl = (import.meta as any)?.env?.VITE_PROXY_URL;
 
   // We need either a direct API key OR a proxy URL
   if (!mistralApiKey && !proxyUrl) {
     return {
       action: 'WAIT',
-      reason: "Missing Credentials. Add VITE_MISTRAL_API_KEY or VITE_PROXY_URL.",
+      reason: "Missing Credentials. Add VITE_MISTRAL_API_KEY or deploy to production.",
       reasoningSteps: ["Credential check failed", "Holding simulation queue", "Awaiting uplink token"],
       learningNote: "Operating in offline mode due to absent credentials.",
       knowledgeCategory: 'Synthesis',
@@ -113,13 +113,14 @@ export async function decideNextAction(
   }
 
   try {
-    // If proxyUrl is present, use it and skip client-side Authorization header
+    // If proxyUrl is present, use it. Otherwise use direct API
     const endpoint = proxyUrl || 'https://api.mistral.ai/v1/chat/completions';
     const headers: Record<string, string> = {
       'Content-Type': 'application/json',
     };
 
-    if (!proxyUrl) {
+    // Only add Authorization if we're not using the proxy
+    if (!proxyUrl && mistralApiKey) {
       headers['Authorization'] = `Bearer ${mistralApiKey}`;
     }
 
