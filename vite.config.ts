@@ -9,6 +9,11 @@ export default defineConfig(({ mode }) => {
     return {
       base: isProd ? '/world26/' : '/',
       envPrefix: 'VITE_',
+      define: {
+        'import.meta.env.VITE_PROXY_URL': JSON.stringify(
+          'https://mistralapicaller.yusufsamodin67.workers.dev/v1/chat/completions'
+        )
+      },
       server: {
         port: 3000,
         host: '0.0.0.0',

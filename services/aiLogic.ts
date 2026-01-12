@@ -96,8 +96,8 @@ export async function decideNextAction(
     ?? (typeof process !== 'undefined' ? (process.env as any)?.MISTRAL_API_KEY : '')
     ?? '').toString().trim();
 
-  // Check for proxy URL (Production/GitHub Pages)
-  const proxyUrl = (import.meta as any)?.env?.VITE_PROXY_URL;
+  // Use Cloudflare Worker proxy in production
+  const proxyUrl = (import.meta as any)?.env?.VITE_PROXY_URL || 'https://mistralapicaller.yusufsamodin67.workers.dev/v1/chat/completions';
 
   // We need either a direct API key OR a proxy URL
   if (!mistralApiKey && !proxyUrl) {
