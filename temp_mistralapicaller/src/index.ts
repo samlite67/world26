@@ -44,12 +44,15 @@ app.post('/state', async (c) => {
 app.post('/v1/chat/completions', async (c) => {
   const apiKey = c.env.MISTRAL_API_KEY;
   if (!apiKey) {
+    console.error('❌ MISTRAL_API_KEY not configured');
     return c.json({ error: 'Configuration Error: Missing API Key' }, 500);
   }
 
   try {
     // Expect the body to match Mistral's request format
     const body = await c.req.json();
+    
+    console.log('📤 Proxying request to Mistral AI:', { model: body.model, messagesCount: body.messages?.length });
     
     // Forward the request to Mistral AI
     const response = await fetch('https://api.mistral.ai/v1/chat/completions', {
@@ -61,12 +64,23 @@ app.post('/v1/chat/completions', async (c) => {
       body: JSON.stringify(body)
     });
 
+    if (!response.ok) {
+      const errorData = await response.text();
+      console.error('❌ Mistral API error:', response.status, errorData);
+      return c.json({ 
+        error: `Mistral API Error: ${response.status}`, 
+        details: errorData 
+      }, 500 as any);
+    }
+
     const data = await response.json();
+    console.log('✅ Mistral API response received');
     
     // Return the response from Mistral back to the client
     return c.json(data, response.status as any);
     
   } catch (err: any) {
+    console.error('❌ Proxy error:', err);
     return c.json({ error: `Proxy Error: ${err.message}` }, 500);
   }
 });

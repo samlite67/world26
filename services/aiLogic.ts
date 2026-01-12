@@ -138,9 +138,19 @@ export async function decideNextAction(
       })
     });
 
-    if (!resp.ok) throw new Error(`Mistral API error: ${resp.status}`);
+    if (!resp.ok) {
+      const errorText = await resp.text();
+      console.error(`Mistral API error: ${resp.status}`, errorText);
+      throw new Error(`Mistral API error: ${resp.status} - ${errorText}`);
+    }
 
     const data = await resp.json();
+    
+    // Check for error in response
+    if (data.error) {
+      console.error('Mistral API returned error:', data.error);
+      throw new Error(`Mistral API error: ${data.error.message || data.error}`);
+    }
     
     // Handle both raw Mistral response AND the proxy's wrapped { text, success } format
     let responseText = '';
@@ -149,6 +159,7 @@ export async function decideNextAction(
     } else if (data.choices?.[0]?.message?.content) {
       responseText = data.choices[0].message.content;
     } else {
+      console.warn('Unexpected API response format:', data);
       responseText = '{}';
     }
     
@@ -163,9 +174,10 @@ export async function decideNextAction(
     return { ...parsed, groundingLinks: links } as AIActionResponse;
   } catch (error) {
     console.error("Architect-OS Neural Fault:", error);
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
     return {
       action: 'WAIT',
-      reason: "Neural desync. Re-aligning logic gates.",
+      reason: `Neural desync: ${errorMessage}`,
       reasoningSteps: ["Connection failure detected", "Re-routing synthesis request", "Flushing instruction cache"],
       learningNote: "Logic gate misalignment detected during planning phase.",
       knowledgeCategory: 'Synthesis',

@@ -38,10 +38,19 @@ app.post('/api/state', (req, res) => {
   }
 });
 
-const mistralApiKey = process.env.MISTRAL_API_KEY || 'JCp4pLqmfVTSQXRTFZ61Bf5Q6aV7fXwb';
-const client = new Mistral({ apiKey: mistralApiKey });
+const mistralApiKey = process.env.MISTRAL_API_KEY;
+
+if (!mistralApiKey) {
+  console.error('❌ MISTRAL_API_KEY not set. Development server requires API key.');
+}
+
+const client = mistralApiKey ? new Mistral({ apiKey: mistralApiKey }) : null;
 
 app.post('/api/mistral/chat', async (req, res) => {
+  if (!client) {
+    return res.status(500).json({ error: 'API key not configured. Set MISTRAL_API_KEY environment variable.' });
+  }
+  
   try {
     const { systemInstruction, prompt, model = 'mistral-large-latest' } = req.body;
 
