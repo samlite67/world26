@@ -6,6 +6,7 @@
     <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
     <meta http-equiv="Pragma" content="no-cache" />
     <meta http-equiv="Expires" content="0" />
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>⚡</text></svg>">
     <title>Underworld Simulation v1.0.2</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
@@ -54,9 +55,9 @@
           if (status) {
             status.innerHTML = '<span style="color: #ff4444;">❌ Failed to load application<br/><small>Check browser console for errors</small></span>';
           }
-          console.error('❌ React app failed to mount after 5 seconds');
+          console.error('❌ React app failed to mount after 10 seconds');
         }
-      }, 5000);
+      }, 10000);
     </script>
     <script type="module" src="/index.tsx"></script>
   </body>
