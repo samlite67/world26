@@ -12,7 +12,12 @@ export default defineConfig(({ mode }) => {
       define: {
         'import.meta.env.VITE_PROXY_URL': JSON.stringify(
           isProd 
-            ? 'https://mistralapicaller.yusufsamodin67.workers.dev/v1/chat/completions'
+            ? 'https://ai-proxy-cloudflare-worker.yusufsamodin67.workers.dev'
+            : undefined
+        ),
+        'import.meta.env.VITE_PROXY_TOKEN': JSON.stringify(
+          isProd 
+            ? 'public-access-token-2026'
             : undefined
         )
       },

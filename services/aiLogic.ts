@@ -98,6 +98,7 @@ export async function decideNextAction(
 
   // Use Cloudflare Worker proxy in production, or direct API in development
   const proxyUrl = (import.meta as any)?.env?.VITE_PROXY_URL;
+  const proxyToken = (import.meta as any)?.env?.VITE_PROXY_TOKEN;
 
   // We need either a direct API key OR a proxy URL
   if (!mistralApiKey && !proxyUrl) {
@@ -114,22 +115,22 @@ export async function decideNextAction(
 
   try {
     // Use proxy URL if available, otherwise fall back to direct API
-    const endpoint = proxyUrl || 'https://api.mistral.ai/v1/chat/completions';
+    const endpoint = proxyUrl ? `${proxyUrl}/v1/ai/query` : 'https://api.mistral.ai/v1/chat/completions';
     const headers: Record<string, string> = {
       'Content-Type': 'application/json',
     };
 
-    // Only add Authorization if we're calling the API directly (not using proxy)
-    if (!proxyUrl && mistralApiKey) {
+    // Add Authorization - use proxy token for proxy, API key for direct
+    if (proxyUrl && proxyToken) {
+      headers['Authorization'] = `Bearer ${proxyToken}`;
+    } else if (!proxyUrl && mistralApiKey) {
       headers['Authorization'] = `Bearer ${mistralApiKey}`;
     }
 
     // Prepare request body - proxy expects different format than direct API
     const requestBody = proxyUrl 
       ? {
-          systemInstruction: systemInstruction,
-          prompt: prompt,
-          model: 'mistral-large-latest'
+          query: `${systemInstruction}\n\n${prompt}`
         }
       : {
           model: 'mistral-large-latest',
