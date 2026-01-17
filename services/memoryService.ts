@@ -2,10 +2,12 @@ import { SimulationState } from "../types";
 
 // Use worker's state endpoint in production, local API in development
 const getStateEndpoint = () => {
-  const proxyUrl = (import.meta as any)?.env?.VITE_PROXY_URL;
+  // Use the defined environment variable directly for Vite compatibility
+  const proxyUrl = import.meta.env.VITE_PROXY_URL || (import.meta as any)?.env?.VITE_PROXY_URL;
+  
   if (proxyUrl && proxyUrl.includes('workers.dev')) {
-    // Extract base URL and add /state
-    const baseUrl = proxyUrl.replace('/v1/chat/completions', '');
+    // Extract base URL (remove /v1/chat/completions if present)
+    const baseUrl = proxyUrl.split('/v1/')[0];
     return `${baseUrl}/state`;
   }
   return '/api/state';
