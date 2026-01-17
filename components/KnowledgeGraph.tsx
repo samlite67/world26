@@ -1,6 +1,6 @@
 
 import React, { useMemo, useEffect, useState, useRef } from 'react';
-import { KnowledgeEntry, KnowledgeCategory } from '../types';
+import { KnowledgeEntry, KnowledgeCategory } from '../src/types';
 
 interface Node {
   id: string;

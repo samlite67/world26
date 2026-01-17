@@ -1,11 +1,11 @@
 
 import React, { useState, useEffect, useCallback, useRef } from 'react';
-import SimulationCanvas from './components/SimulationCanvas';
-import { KnowledgeGraph } from './components/KnowledgeGraph';
+import SimulationCanvas from '../components/SimulationCanvas';
+import { KnowledgeGraph } from '../components/KnowledgeGraph';
 import { WorldObject, LogEntry, SimulationState, KnowledgeEntry, GroundingLink, ConstructionPlan, KnowledgeCategory } from './types';
-import { decideNextAction, AIActionResponse } from './services/aiLogic';
-import { loadSimulationState, saveSimulationState } from './services/memoryService';
-import { logger } from './services/logger';
+import { decideNextAction, AIActionResponse } from '../services/aiLogic';
+import { loadSimulationState, saveSimulationState } from '../services/memoryService';
+import { logger } from '../services/logger';
 
 const INITIAL_GOAL = "Synthesize Sustainable Modular Settlement";
 

@@ -3,7 +3,7 @@ import React, { useMemo } from 'react';
 import { Canvas } from '@react-three/fiber';
 import { OrbitControls, Sky, Stars, ContactShadows, Environment } from '@react-three/drei';
 import * as THREE from 'three';
-import { WorldObject, ConstructionPlan } from '../types';
+import { WorldObject, ConstructionPlan } from '../src/types';
 import { WorldAsset } from './WorldAssets';
 import { Avatar } from './Avatar';
 

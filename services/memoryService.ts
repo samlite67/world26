@@ -1,4 +1,4 @@
-import { SimulationState } from "../types";
+import { SimulationState } from "../src/types";
 import { logger } from './logger';
 
 // Use worker's state endpoint in production, local API in development

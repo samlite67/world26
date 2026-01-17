@@ -1,7 +1,7 @@
 
 import React, { useRef } from 'react';
 import { useFrame } from '@react-three/fiber';
-import { WorldObjectType } from '../types';
+import { WorldObjectType } from '../src/types';
 import * as THREE from 'three';
 
 interface ObjectProps {
