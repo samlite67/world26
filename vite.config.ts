@@ -8,6 +8,13 @@ export default defineConfig(({ mode }) => {
 
     return {
       base: isProd ? '/world26/' : '/',
+      build: {
+        rollupOptions: {
+          input: {
+            main: path.resolve(__dirname, 'index.html')
+          }
+        }
+      },
       envPrefix: 'VITE_',
       define: {
         'import.meta.env.VITE_PROXY_URL': JSON.stringify(
