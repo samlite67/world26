@@ -113,29 +113,38 @@ export async function decideNextAction(
   }
 
   try {
-    // If proxyUrl is present, use it. Otherwise use direct API
+    // Use proxy URL if available, otherwise fall back to direct API
     const endpoint = proxyUrl || 'https://api.mistral.ai/v1/chat/completions';
     const headers: Record<string, string> = {
       'Content-Type': 'application/json',
     };
 
-    // Only add Authorization if we're not using the proxy
+    // Only add Authorization if we're calling the API directly (not using proxy)
     if (!proxyUrl && mistralApiKey) {
       headers['Authorization'] = `Bearer ${mistralApiKey}`;
     }
 
+    // Prepare request body - proxy expects different format than direct API
+    const requestBody = proxyUrl 
+      ? {
+          systemInstruction: systemInstruction,
+          prompt: prompt,
+          model: 'mistral-large-latest'
+        }
+      : {
+          model: 'mistral-large-latest',
+          messages: [
+            { role: 'system', content: systemInstruction },
+            { role: 'user', content: prompt }
+          ],
+          temperature: 0.7,
+          max_tokens: 2000
+        };
+
     const resp = await fetch(endpoint, {
       method: 'POST',
       headers: headers,
-      body: JSON.stringify({
-        model: 'mistral-large-latest',
-        messages: [
-          { role: 'system', content: systemInstruction },
-          { role: 'user', content: prompt }
-        ],
-        temperature: 0.7,
-        max_tokens: 2000
-      })
+      body: JSON.stringify(requestBody)
     });
 
     if (!resp.ok) {

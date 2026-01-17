@@ -1,54 +1,203 @@
-# OpenAPI Template
+# 🌍 World26 Cloudflare Worker API Proxy
 
-[![Deploy to Cloudflare](https://deploy.workers.cloudflare.com/button)](https://deploy.workers.cloudflare.com/?url=https://github.com/cloudflare/templates/tree/main/chanfana-openapi-template)
+A secure API proxy for World26 simulation, deployed on Cloudflare Workers with D1 database persistence.
 
-![OpenAPI Template Preview](https://imagedelivery.net/wSMYJvS3Xw-n339CbDyDIA/91076b39-1f5b-46f6-7f14-536a6f183000/public)
+[![Deploy to Cloudflare](https://deploy.workers.cloudflare.com/button)](https://deploy.workers.cloudflare.com/?url=https://github.com/samlite67/world26)
 
-<!-- dash-content-start -->
+## 🚀 Quick Start
 
-This is a Cloudflare Worker with OpenAPI 3.1 Auto Generation and Validation using [chanfana](https://github.com/cloudflare/chanfana) and [Hono](https://github.com/honojs/hono).
-
-This is an example project made to be used as a quick start into building OpenAPI compliant Workers that generates the
-`openapi.json` schema automatically from code and validates the incoming request to the defined parameters or request body.
-
-This template includes various endpoints, a D1 database, and integration tests using [Vitest](https://vitest.dev/) as examples. In endpoints, you will find [chanfana D1 AutoEndpoints](https://chanfana.com/endpoints/auto/d1) and a [normal endpoint](https://chanfana.com/endpoints/defining-endpoints) to serve as examples for your projects.
-
-Besides being able to see the OpenAPI schema (openapi.json) in the browser, you can also extract the schema locally no hassle by running this command `npm run schema`.
-
-<!-- dash-content-end -->
-
-> [!IMPORTANT]
-> When using C3 to create this project, select "no" when it asks if you want to deploy. You need to follow this project's [setup steps](https://github.com/cloudflare/templates/tree/main/openapi-template#setup-steps) before deploying.
-
-## Getting Started
-
-Outside of this repo, you can start a new project with this template using [C3](https://developers.cloudflare.com/pages/get-started/c3/) (the `create-cloudflare` CLI):
+### 1. Deploy the Worker
 
 ```bash
-npm create cloudflare@latest -- --template=cloudflare/templates/openapi-template
+cd temp_mistralapicaller
+npm install
+npx wrangler secret put MISTRAL_API_KEY
+npx wrangler d1 migrations apply world26-memory --remote
+npx wrangler deploy
 ```
 
-A live public deployment of this template is available at [https://openapi-template.templates.workers.dev](https://openapi-template.templates.workers.dev)
+### 2. Get Your Worker URL
 
-## Setup Steps
+After deployment, copy the URL (e.g., `https://mistralapicaller.yourusername.workers.dev`)
 
-1. Install the project dependencies with a package manager of your choice:
+### 3. Configure Frontend
+
+Update your `.env.local` file:
+```bash
+VITE_PROXY_URL=https://mistralapicaller.yourusername.workers.dev/v1/chat/completions
+```
+
+### 4. Test It
+
+Open `test.html` in your browser or visit:
+```
+https://mistralapicaller.yourusername.workers.dev/
+```
+
+## 📚 Full Documentation
+
+See [DEPLOYMENT.md](./DEPLOYMENT.md) for complete setup instructions.
+
+## 🔗 API Endpoints
+
+| Endpoint | Method | Description |
+|----------|--------|-------------|
+| `/` | GET | Health check and service info |
+| `/v1/chat/completions` | POST | Mistral AI proxy (OpenAI compatible) |
+| `/state` | GET | Load simulation state from D1 |
+| `/state` | POST | Save simulation state to D1 |
+
+## 🧪 Testing
+
+1. **Interactive Test Page**: Open `test.html` in a browser
+2. **Command Line Health Check**: 
    ```bash
-   npm install
+   curl https://YOUR_WORKER.workers.dev/
    ```
-2. Create a [D1 database](https://developers.cloudflare.com/d1/get-started/) with the name "openapi-template-db":
+3. **Test Mistral API**:
    ```bash
-   npx wrangler d1 create openapi-template-db
+   curl -X POST https://YOUR_WORKER.workers.dev/v1/chat/completions \
+     -H "Content-Type: application/json" \
+     -d '{"model":"mistral-large-latest","messages":[{"role":"user","content":"Hello!"}]}'
    ```
-   ...and update the `database_id` field in `wrangler.json` with the new database ID.
-3. Run the following db migration to initialize the database (notice the `migrations` directory in this project):
-   ```bash
-   npx wrangler d1 migrations apply DB --remote
-   ```
-4. Deploy the project!
-   ```bash
-   npx wrangler deploy
-   ```
+
+## 🔐 Security
+
+- ✅ API keys stored securely in Cloudflare (never exposed to clients)
+- ✅ CORS enabled for GitHub Pages compatibility
+- ✅ Environment-specific secrets
+- ✅ No credentials in source code
+
+## 🛠️ Tech Stack
+
+- **Runtime**: Cloudflare Workers (V8 Isolates)
+- **Framework**: Hono.js
+- **Database**: Cloudflare D1 (SQLite)
+- **AI API**: Mistral AI
+- **Language**: TypeScript
+
+## 📦 Project Structure
+
+```
+temp_mistralapicaller/
+├── src/
+│   ├── index.ts          # Main worker code with Hono routes
+│   └── types.ts          # TypeScript type definitions
+├── migrations/           # D1 database schema migrations
+│   ├── 0001_add_tasks_table.sql
+│   └── 0002_add_memory_table.sql
+├── tests/               # Integration tests (Vitest)
+├── wrangler.jsonc       # Worker configuration
+├── DEPLOYMENT.md        # Comprehensive deployment guide
+├── test.html           # Interactive API test interface
+└── README.md           # This file
+```
+
+## 🔄 Development Workflow
+
+```bash
+# Install dependencies
+npm install
+
+# Run worker locally with hot reload
+npx wrangler dev
+
+# View real-time logs from deployed worker
+npx wrangler tail
+
+# Run migrations on local D1
+npx wrangler d1 migrations apply world26-memory --local
+
+# Run migrations on production D1
+npx wrangler d1 migrations apply world26-memory --remote
+
+# Deploy to Cloudflare
+npx wrangler deploy
+
+# List secrets
+npx wrangler secret list
+
+# Update a secret
+npx wrangler secret put MISTRAL_API_KEY
+```
+
+## ⚡ Features
+
+- 🔒 **Secure API Key Management**: Secrets stored in Cloudflare environment
+- 🌐 **Full CORS Support**: Works seamlessly with GitHub Pages
+- 💾 **Persistent State**: D1 database for simulation state
+- 🤖 **AI Integration**: Mistral AI chat completions
+- 📊 **Health Monitoring**: Built-in health check endpoint
+- 🧪 **Interactive Testing**: Beautiful test interface included
+- 🚀 **Edge Deployment**: Low latency worldwide
+- 📝 **TypeScript**: Type-safe development
+
+## 🌐 Integration with GitHub Pages
+
+Your World26 app on GitHub Pages will call this Worker proxy, which securely communicates with Mistral AI:
+
+```
+┌─────────────────────┐
+│  GitHub Pages       │
+│  (Your Frontend)    │
+└──────────┬──────────┘
+           │ fetch()
+           ↓
+┌─────────────────────┐
+│ Cloudflare Worker   │
+│ (This Proxy)        │
+│ + MISTRAL_API_KEY   │
+└──────────┬──────────┘
+           │ with API Key
+           ↓
+┌─────────────────────┐
+│  Mistral AI API     │
+└─────────────────────┘
+```
+
+**Benefits:**
+- ✅ API key never exposed to browser
+- ✅ No CORS issues
+- ✅ Global edge network performance
+- ✅ Built-in DDoS protection
+
+## 📝 Environment Variables
+
+Set secrets using Wrangler CLI:
+
+```bash
+# Required: Mistral AI API Key
+npx wrangler secret put MISTRAL_API_KEY
+```
+
+## 🐛 Troubleshooting
+
+### Worker returns "Missing API Key"
+```bash
+npx wrangler secret put MISTRAL_API_KEY
+# Then paste your key when prompted
+```
+
+### CORS errors in browser
+Verify CORS headers are present:
+```bash
+curl -I https://YOUR_WORKER.workers.dev/
+# Should show: Access-Control-Allow-Origin: *
+```
+
+### Database errors
+Re-run migrations:
+```bash
+npx wrangler d1 migrations apply world26-memory --remote
+```
+
+### Worker not updating after deploy
+Try force refresh:
+```bash
+npx wrangler deploy --compatibility-date=$(date +%Y-%m-%d)
+```
+
+## 📚 Additional Resources
 5. Monitor your worker
    ```bash
    npx wrangler tail

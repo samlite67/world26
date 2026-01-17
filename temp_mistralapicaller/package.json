@@ -1,13 +1,21 @@
 {
 	"name": "mistralapicaller",
-	"description": "Mistral AI Proxy with state management",
+	"description": "World26 API Proxy - Secure Mistral AI proxy with D1 state management",
 	"version": "1.0.0",
 	"type": "module",
 	"scripts": {
 		"deploy": "wrangler deploy",
 		"dev": "wrangler dev",
 		"start": "wrangler dev",
-		"test": "vitest"
+		"test": "vitest",
+		"cf-typegen": "wrangler types",
+		"migrate:local": "wrangler d1 migrations apply world26-memory --local",
+		"migrate:remote": "wrangler d1 migrations apply world26-memory --remote",
+		"logs": "wrangler tail",
+		"secret:set": "wrangler secret put MISTRAL_API_KEY",
+		"secret:list": "wrangler secret list",
+		"db:query": "wrangler d1 execute world26-memory --remote --command",
+		"setup": "./deploy.sh"
 	},
 	"dependencies": {
 		"hono": "4.11.1"

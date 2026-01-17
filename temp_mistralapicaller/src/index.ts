@@ -8,8 +8,14 @@ type Bindings = {
 
 const app = new Hono<{ Bindings: Bindings }>();
 
-// Enable CORS for all origins
-app.use('*', cors());
+// Enable CORS for all origins (required for GitHub Pages)
+app.use('*', cors({
+  origin: '*',
+  allowMethods: ['GET', 'POST', 'OPTIONS'],
+  allowHeaders: ['Content-Type'],
+  exposeHeaders: ['Content-Length'],
+  maxAge: 86400,
+}));
 
 // GET /state - Retrieve the saved simulation state
 app.get('/state', async (c) => {
@@ -41,6 +47,7 @@ app.post('/state', async (c) => {
 });
 
 // POST /v1/chat/completions - Proxy to Mistral AI
+// Supports both standard Mistral API format and simplified format
 app.post('/v1/chat/completions', async (c) => {
   const apiKey = c.env.MISTRAL_API_KEY;
   if (!apiKey) {
@@ -49,10 +56,28 @@ app.post('/v1/chat/completions', async (c) => {
   }
 
   try {
-    // Expect the body to match Mistral's request format
     const body = await c.req.json();
     
-    console.log('📤 Proxying request to Mistral AI:', { model: body.model, messagesCount: body.messages?.length });
+    // Handle both standard Mistral format and simplified format
+    let messages;
+    if (body.systemInstruction && body.prompt) {
+      // Simplified format from frontend
+      messages = [
+        { role: 'system', content: body.systemInstruction },
+        { role: 'user', content: body.prompt }
+      ];
+    } else if (body.messages) {
+      // Standard Mistral format
+      messages = body.messages;
+    } else {
+      return c.json({ error: 'Invalid request format' }, 400);
+    }
+
+    const model = body.model || 'mistral-large-latest';
+    const temperature = body.temperature || 0.7;
+    const maxTokens = body.max_tokens || 2000;
+    
+    console.log('📤 Proxying request to Mistral AI:', { model, messagesCount: messages.length });
     
     // Forward the request to Mistral AI
     const response = await fetch('https://api.mistral.ai/v1/chat/completions', {
@@ -61,7 +86,12 @@ app.post('/v1/chat/completions', async (c) => {
         'Content-Type': 'application/json',
         'Authorization': `Bearer ${apiKey}`
       },
-      body: JSON.stringify(body)
+      body: JSON.stringify({
+        model,
+        messages,
+        temperature,
+        max_tokens: maxTokens
+      })
     });
 
     if (!response.ok) {
@@ -89,8 +119,18 @@ app.post('/v1/chat/completions', async (c) => {
 app.get('/', (c) => {
   return c.json({ 
     status: 'online', 
-    service: 'Mistral API Proxy',
-    endpoints: ['/v1/chat/completions', '/state']
+    service: 'World26 API Proxy',
+    version: '1.0.0',
+    endpoints: {
+      health: 'GET /',
+      chat: 'POST /v1/chat/completions',
+      state: {
+        get: 'GET /state',
+        post: 'POST /state'
+      }
+    },
+    cors: 'enabled',
+    message: 'Ready to serve GitHub Pages'
   });
 });
 
