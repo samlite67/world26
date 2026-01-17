@@ -5,8 +5,13 @@ const getStateEndpoint = () => {
   // Use the defined environment variable directly for Vite compatibility
   const proxyUrl = import.meta.env.VITE_PROXY_URL || (import.meta as any)?.env?.VITE_PROXY_URL;
   
+  // New proxy doesn't support state endpoint - use localStorage instead
+  if (proxyUrl && proxyUrl.includes('ai-proxy-cloudflare-worker')) {
+    return null; // Will use localStorage fallback
+  }
+  
   if (proxyUrl && proxyUrl.includes('workers.dev')) {
-    // Extract base URL (remove /v1/chat/completions if present)
+    // Old proxy with state support
     const baseUrl = proxyUrl.split('/v1/')[0];
     return `${baseUrl}/state`;
   }
@@ -14,10 +19,20 @@ const getStateEndpoint = () => {
 };
 
 const API_BASE = getStateEndpoint();
-console.log('📍 State endpoint:', API_BASE);
+if (API_BASE) {
+  console.log('📍 State endpoint:', API_BASE);
+} else {
+  console.log('📍 Using localStorage for state persistence');
+}
 
 export async function saveSimulationState(state: SimulationState): Promise<void> {
   try {
+    // Use localStorage if no API endpoint available
+    if (!API_BASE) {
+      localStorage.setItem('world26_simulation_state', JSON.stringify(state));
+      return;
+    }
+    
     const response = await fetch(API_BASE, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -33,6 +48,12 @@ export async function saveSimulationState(state: SimulationState): Promise<void>
 
 export async function loadSimulationState(): Promise<SimulationState | null> {
   try {
+    // Use localStorage if no API endpoint available
+    if (!API_BASE) {
+      const stored = localStorage.getItem('world26_simulation_state');
+      return stored ? JSON.parse(stored) : null;
+    }
+    
     const resp = await fetch(API_BASE);
     if (!resp.ok) return null;
     const data = await resp.json();

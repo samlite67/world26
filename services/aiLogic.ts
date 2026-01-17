@@ -162,9 +162,14 @@ export async function decideNextAction(
       throw new Error(`Mistral API error: ${data.error.message || data.error}`);
     }
     
-    // Handle both raw Mistral response AND the proxy's wrapped { text, success } format
+    // Handle multiple response formats:
+    // New proxy: {content: '...', model: '...'}
+    // Old proxy: {text: '...', success: true}
+    // Direct API: {choices: [{message: {content: '...'}}]}
     let responseText = '';
-    if (data.text) {
+    if (data.content) {
+      responseText = data.content;
+    } else if (data.text) {
       responseText = data.text;
     } else if (data.choices?.[0]?.message?.content) {
       responseText = data.choices[0].message.content;
