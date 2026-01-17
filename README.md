@@ -4,7 +4,7 @@
 
 # 🌍 World26 - AI-Powered 3D Simulation
 
-An intelligent world-building simulation powered by Mistral AI, rendered in 3D with Three.js.
+An intelligent world-building simulation powered by Mistral AI, rendered in 3D with Three.js.1
 
 **View in AI Studio:** https://ai.studio/apps/drive/1_EaOtIuOLUaXP2xbDTVMLnFIQ3aBOmEv
 
