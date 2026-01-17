@@ -5,6 +5,7 @@ import { KnowledgeGraph } from './components/KnowledgeGraph';
 import { WorldObject, LogEntry, SimulationState, KnowledgeEntry, GroundingLink, ConstructionPlan, KnowledgeCategory } from './types';
 import { decideNextAction, AIActionResponse } from './services/aiLogic';
 import { loadSimulationState, saveSimulationState } from './services/memoryService';
+import { logger } from './services/logger';
 
 const INITIAL_GOAL = "Synthesize Sustainable Modular Settlement";
 
@@ -13,6 +14,14 @@ const getTerrainHeight = (x: number, z: number) => {
 };
 
 function App() {
+  logger.info('App', '🚀 App component initializing');
+  logger.info('App', 'Environment', { 
+    isDev: import.meta.env.DEV, 
+    mode: import.meta.env.MODE,
+    proxyUrl: import.meta.env.VITE_PROXY_URL,
+    hasApiKey: !!import.meta.env.VITE_MISTRAL_API_KEY
+  });
+  
   const [state, setState] = useState<SimulationState>({
     objects: [],
     logs: [{ id: '1', type: 'success', message: 'Architect-OS Online. Neural pathways clear.', timestamp: Date.now() }],
@@ -47,10 +56,16 @@ function App() {
 
   // Load state on mount
   useEffect(() => {
+    logger.info('App', '🔄 Initializing memory system');
     async function initMemory() {
       try {
         const savedState = await loadSimulationState();
         if (savedState) {
+          logger.info('App', '✅ Loaded saved state', { 
+            objects: savedState.objects?.length,
+            logs: savedState.logs?.length,
+            knowledge: savedState.knowledgeBase?.length
+          });
           setState(prev => ({
             ...prev,
             ...savedState,
@@ -411,6 +426,19 @@ function App() {
       <div className="w-full h-full">
         <SimulationCanvas objects={state.objects} avatarPos={avatarPos} avatarTarget={null} activePlan={state.activePlan} />
       </div>
+
+      {/* DEBUG LOGGER PANEL */}
+      <button 
+        onClick={() => {
+          const logs = logger.getLogs();
+          console.log('📋 Recent logs:', logs);
+          alert(`Logs exported to console. Total: ${logs.length}\n\nTip: Type 'world26Logger.exportLogs()' in console to get JSON.`);
+        }}
+        className="fixed bottom-24 right-8 z-50 px-4 py-2 bg-purple-600/80 hover:bg-purple-500 backdrop-blur-sm border border-purple-400/50 rounded-2xl text-xs font-bold text-white transition-all duration-300 shadow-lg hover:shadow-purple-500/50"
+        title="Export debug logs"
+      >
+        🔍 Debug Logs
+      </button>
 
       {/* FOOTER */}
       <div className="absolute bottom-8 right-8 z-10 flex gap-4">

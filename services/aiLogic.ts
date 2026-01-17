@@ -1,5 +1,6 @@
 
 import { WorldObject, LogEntry, WorldObjectType, GroundingLink, ConstructionPlan, KnowledgeEntry, KnowledgeCategory } from "../types";
+import { logger } from './logger';
 
 export interface AIActionResponse {
   action: 'PLACE' | 'MOVE' | 'WAIT';
@@ -116,6 +117,14 @@ export async function decideNextAction(
   try {
     // Use proxy URL if available, otherwise fall back to direct API
     const endpoint = proxyUrl ? `${proxyUrl}/v1/ai/query` : 'https://api.mistral.ai/v1/chat/completions';
+    
+    logger.info('AI', '📡 Making API request', { 
+      endpoint, 
+      hasProxy: !!proxyUrl,
+      hasToken: !!proxyToken,
+      hasApiKey: !!mistralApiKey
+    });
+    
     const headers: Record<string, string> = {
       'Content-Type': 'application/json',
     };
@@ -156,8 +165,16 @@ export async function decideNextAction(
 
     const data = await resp.json();
     
+    logger.info('AI', '✅ API response received', { 
+      status: resp.status,
+      hasContent: !!data.content,
+      hasText: !!data.text,
+      hasChoices: !!data.choices
+    });
+    
     // Check for error in response
     if (data.error) {
+      logger.error('AI', 'API returned error', data.error);
       console.error('Mistral API returned error:', data.error);
       throw new Error(`Mistral API error: ${data.error.message || data.error}`);
     }

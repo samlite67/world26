@@ -1,4 +1,5 @@
 import { SimulationState } from "../types";
+import { logger } from './logger';
 
 // Use worker's state endpoint in production, local API in development
 const getStateEndpoint = () => {
@@ -29,9 +30,12 @@ export async function saveSimulationState(state: SimulationState): Promise<void>
   try {
     // Use localStorage if no API endpoint available
     if (!API_BASE) {
+      logger.debug('Memory', '💾 Saving state to localStorage');
       localStorage.setItem('world26_simulation_state', JSON.stringify(state));
       return;
     }
+    
+    logger.debug('Memory', '💾 Saving state to API', { endpoint: API_BASE });
     
     const response = await fetch(API_BASE, {
       method: 'POST',
@@ -50,9 +54,14 @@ export async function loadSimulationState(): Promise<SimulationState | null> {
   try {
     // Use localStorage if no API endpoint available
     if (!API_BASE) {
+      logger.debug('Memory', '📂 Loading state from localStorage');
       const stored = localStorage.getItem('world26_simulation_state');
-      return stored ? JSON.parse(stored) : null;
+      const result = stored ? JSON.parse(stored) : null;
+      logger.info('Memory', result ? '✅ State loaded' : '⚠️ No saved state found');
+      return result;
     }
+    
+    logger.debug('Memory', '📂 Loading state from API', { endpoint: API_BASE });
     
     const resp = await fetch(API_BASE);
     if (!resp.ok) return null;
