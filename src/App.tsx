@@ -289,7 +289,7 @@ function App() {
       </div>
 
       {/* LEFT SIDEBAR DASHBOARD */}
-      <div className="absolute top-8 left-8 bottom-24 w-80 flex flex-col gap-4 z-10 pointer-events-none">
+      <div className="absolute top-8 left-8 bottom-24 w-80 flex flex-col gap-4 z-20 pointer-events-none">
         
         {/* STATS PANEL */}
         {state.ui.showStats && (
@@ -376,7 +376,7 @@ function App() {
 
        {/* PLANNING HUD */}
        {state.ui.showPlanning && state.activePlan && (
-        <div className="absolute top-8 left-1/2 -translate-x-1/2 z-10 w-[420px] p-6 bg-black/60 backdrop-blur-3xl border border-white/10 rounded-[40px] shadow-2xl animate-in fade-in zoom-in-95 duration-500">
+        <div className="absolute top-8 left-1/2 -translate-x-1/2 z-20 w-[420px] p-6 bg-black/60 backdrop-blur-3xl border border-white/10 rounded-[40px] shadow-2xl animate-in fade-in zoom-in-95 duration-500">
           <div className="flex flex-col gap-1 mb-4 text-center">
             <span className="text-[9px] font-black uppercase text-emerald-400 tracking-[0.4em]">Current Objective</span>
             <h2 className="text-lg font-black italic uppercase tracking-tighter text-white">{state.activePlan.objective || "Strategic Synthesis"}</h2>
@@ -397,7 +397,7 @@ function App() {
 
       {/* NEURAL DB PANEL */}
       {state.ui.showKnowledge && (
-        <div className="absolute top-24 right-8 z-10 w-[440px] max-h-[75vh] flex flex-col bg-black/60 backdrop-blur-3xl border border-white/10 rounded-[40px] shadow-2xl overflow-hidden animate-in slide-in-from-right-8 duration-700">
+        <div className="absolute top-24 right-8 z-20 w-[440px] max-h-[75vh] flex flex-col bg-black/60 backdrop-blur-3xl border border-white/10 rounded-[40px] shadow-2xl overflow-hidden animate-in slide-in-from-right-8 duration-700">
           <div className="p-8 bg-white/5 border-b border-white/10 flex justify-between items-center">
             <span className="text-sm font-black uppercase text-white tracking-[0.3em]">Neural Repository</span>
             <div className="w-2 h-2 bg-indigo-500 rounded-full shadow-[0_0_10px_#6366f1] animate-pulse" />
@@ -423,7 +423,7 @@ function App() {
       )}
 
       {/* 3D RENDERER */}
-      <div className="w-full h-full">
+      <div className="absolute inset-0 w-full h-full z-0">
         <SimulationCanvas objects={state.objects} avatarPos={avatarPos} avatarTarget={null} activePlan={state.activePlan} />
       </div>
 
