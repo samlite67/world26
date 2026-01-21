@@ -1,6 +1,5 @@
 
-import { WorldObject, LogEntry, WorldObjectType, GroundingLink, ConstructionPlan, KnowledgeEntry, KnowledgeCategory } from "../src/types";
-import { logger } from './logger';
+import { WorldObject, LogEntry, WorldObjectType, GroundingLink, ConstructionPlan, KnowledgeEntry, KnowledgeCategory } from "../types";
 
 export interface AIActionResponse {
   action: 'PLACE' | 'MOVE' | 'WAIT';
@@ -99,7 +98,6 @@ export async function decideNextAction(
 
   // Use Cloudflare Worker proxy in production, or direct API in development
   const proxyUrl = (import.meta as any)?.env?.VITE_PROXY_URL;
-  const proxyToken = (import.meta as any)?.env?.VITE_PROXY_TOKEN;
 
   // We need either a direct API key OR a proxy URL
   if (!mistralApiKey && !proxyUrl) {
@@ -116,30 +114,22 @@ export async function decideNextAction(
 
   try {
     // Use proxy URL if available, otherwise fall back to direct API
-    const endpoint = proxyUrl ? `${proxyUrl}/v1/ai/query` : 'https://api.mistral.ai/v1/chat/completions';
-    
-    logger.info('AI', '📡 Making API request', { 
-      endpoint, 
-      hasProxy: !!proxyUrl,
-      hasToken: !!proxyToken,
-      hasApiKey: !!mistralApiKey
-    });
-    
+    const endpoint = proxyUrl || 'https://api.mistral.ai/v1/chat/completions';
     const headers: Record<string, string> = {
       'Content-Type': 'application/json',
     };
 
-    // Add Authorization - use proxy token for proxy, API key for direct
-    if (proxyUrl && proxyToken) {
-      headers['Authorization'] = `Bearer ${proxyToken}`;
-    } else if (!proxyUrl && mistralApiKey) {
+    // Only add Authorization if we're calling the API directly (not using proxy)
+    if (!proxyUrl && mistralApiKey) {
       headers['Authorization'] = `Bearer ${mistralApiKey}`;
     }
 
     // Prepare request body - proxy expects different format than direct API
     const requestBody = proxyUrl 
       ? {
-          query: `${systemInstruction}\n\n${prompt}`
+          systemInstruction: systemInstruction,
+          prompt: prompt,
+          model: 'mistral-large-latest'
         }
       : {
           model: 'mistral-large-latest',
@@ -165,28 +155,15 @@ export async function decideNextAction(
 
     const data = await resp.json();
     
-    logger.info('AI', '✅ API response received', { 
-      status: resp.status,
-      hasContent: !!data.content,
-      hasText: !!data.text,
-      hasChoices: !!data.choices
-    });
-    
     // Check for error in response
     if (data.error) {
-      logger.error('AI', 'API returned error', data.error);
       console.error('Mistral API returned error:', data.error);
       throw new Error(`Mistral API error: ${data.error.message || data.error}`);
     }
     
-    // Handle multiple response formats:
-    // New proxy: {content: '...', model: '...'}
-    // Old proxy: {text: '...', success: true}
-    // Direct API: {choices: [{message: {content: '...'}}]}
+    // Handle both raw Mistral response AND the proxy's wrapped { text, success } format
     let responseText = '';
-    if (data.content) {
-      responseText = data.content;
-    } else if (data.text) {
+    if (data.text) {
       responseText = data.text;
     } else if (data.choices?.[0]?.message?.content) {
       responseText = data.choices[0].message.content;
