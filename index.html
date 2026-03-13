@@ -91,11 +91,11 @@
       
       // Detect if script fails to load
       setTimeout(() => {
-        if (document.getElementById('root').children.length === 1) {
-          const status = document.getElementById('loading-status');
-          if (status) {
-            status.innerHTML = '<span style="color: #ff4444;">❌ Failed to load application<br/><small>Check browser console for errors</small></span>';
-          }
+        const appMounted = window.__WORLD26_APP_MOUNTED__ === true;
+        const status = document.getElementById('loading-status');
+
+        if (!appMounted && status) {
+          status.innerHTML = '<span style="color: #ff4444;">❌ Failed to load application<br/><small>Check browser console for errors</small></span>';
           console.error('❌ React app failed to mount after 10 seconds');
         }
       }, 10000);
