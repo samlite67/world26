@@ -1,11 +1,15 @@
 
-import React, { useState, useEffect, useCallback, useRef } from 'react';
-import SimulationCanvas from '../components/SimulationCanvas';
-import { KnowledgeGraph } from '../components/KnowledgeGraph';
+import React, { useState, useEffect, useCallback, useRef, lazy, Suspense } from 'react';
 import { WorldObject, LogEntry, SimulationState, KnowledgeEntry, GroundingLink, ConstructionPlan, KnowledgeCategory } from './types';
 import { decideNextAction, AIActionResponse } from '../services/aiLogic';
 import { loadSimulationState, saveSimulationState } from '../services/memoryService';
 import { logger } from '../services/logger';
+
+const loadSimulationCanvas = () => import('../components/SimulationCanvas');
+const loadKnowledgeGraph = () => import('../components/KnowledgeGraph');
+
+const SimulationCanvas = lazy(loadSimulationCanvas);
+const KnowledgeGraph = lazy(() => loadKnowledgeGraph().then(module => ({ default: module.KnowledgeGraph })));
 
 const INITIAL_GOAL = "Synthesize Sustainable Modular Settlement";
 
@@ -87,6 +91,24 @@ function App() {
     }
     initMemory();
   }, [addLog]);
+
+  // Warm up lazy chunks shortly after mount so toggling panels feels instant.
+  useEffect(() => {
+    const warmUp = () => {
+      void loadSimulationCanvas();
+      if (state.ui.showKnowledge) {
+        void loadKnowledgeGraph();
+      }
+    };
+
+    if (typeof window !== 'undefined' && 'requestIdleCallback' in window) {
+      const idleId = window.requestIdleCallback(warmUp, { timeout: 1200 });
+      return () => window.cancelIdleCallback(idleId);
+    }
+
+    const timeoutId = window.setTimeout(warmUp, 600);
+    return () => window.clearTimeout(timeoutId);
+  }, [state.ui.showKnowledge]);
 
   // Auto-save state whenever significant changes occur
   useEffect(() => {
@@ -403,7 +425,11 @@ function App() {
             <div className="w-2 h-2 bg-indigo-500 rounded-full shadow-[0_0_10px_#6366f1] animate-pulse" />
           </div>
           <div className="flex-1 overflow-y-auto p-8 space-y-6 custom-scrollbar">
-            {state.knowledgeBase.length > 0 && <KnowledgeGraph entries={state.knowledgeBase} width={370} height={240} />}
+            {state.knowledgeBase.length > 0 && (
+              <Suspense fallback={<div className="h-[240px] rounded-2xl border border-white/10 bg-white/5 animate-pulse" />}>
+                <KnowledgeGraph entries={state.knowledgeBase} width={370} height={240} />
+              </Suspense>
+            )}
             {state.knowledgeBase.length === 0 ? (
               <div className="py-24 text-center opacity-20 text-[10px] font-black uppercase tracking-[0.4em]">Awaiting Uplink...</div>
             ) : (
@@ -424,7 +450,9 @@ function App() {
 
       {/* 3D RENDERER */}
       <div className="absolute inset-0 w-full h-full z-0">
-        <SimulationCanvas objects={state.objects} avatarPos={avatarPos} avatarTarget={null} activePlan={state.activePlan} />
+        <Suspense fallback={<div className="h-full w-full bg-slate-950 grid place-items-center text-[10px] uppercase tracking-[0.3em] text-white/30">Booting render core…</div>}>
+          <SimulationCanvas objects={state.objects} avatarPos={avatarPos} avatarTarget={null} activePlan={state.activePlan} />
+        </Suspense>
       </div>
 
       {/* DEBUG LOGGER PANEL */}
