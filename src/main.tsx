@@ -17,6 +17,7 @@ console.log('🚀 Application starting...');
 console.log('Environment:', import.meta.env.MODE);
 console.log('Base URL:', import.meta.env.BASE_URL);
 console.log('Proxy URL:', import.meta.env.VITE_PROXY_URL);
+(window as Window & { __WORLD26_APP_MOUNTED__?: boolean }).__WORLD26_APP_MOUNTED__ = false;
 
 try {
   const rootElement = document.getElementById('root');
@@ -36,6 +37,7 @@ try {
     </React.StrictMode>
   );
 
+  (window as Window & { __WORLD26_APP_MOUNTED__?: boolean }).__WORLD26_APP_MOUNTED__ = true;
   console.log('✅ React app mounted');
 } catch (error) {
   console.error('❌ Fatal error during app initialization:', error);
